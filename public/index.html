@@ -1,0 +1,55 @@
+<!--
+Simple UI for Gen Jargon Translator.
+
+Codex, please:
+- Use a centered container.
+- Add:
+  - A select#mode: old_to_young, young_to_old, auto.
+  - A textarea#inputText for the source text.
+  - A range input#cringe (0-1 step 0.1) for max cringe.
+  - A button#translateBtn to call the backend.
+  - A div#loading for "Translating..." message (hidden by default).
+  - A div#variants for result cards.
+  - A ul#explanations for explanations.
+
+Include script.js and styles.css.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gen Jargon Translator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>Gen Jargon Translator</h1>
+    <p>Convert between corporate speak and Gen Z slang 👵 ↔ 🧑‍🎤</p>
+
+    <label for="mode">Mode</label>
+    <select id="mode">
+      <option value="old_to_young">Old → Young</option>
+      <option value="young_to_old">Young → Old</option>
+      <option value="auto">Auto detect</option>
+    </select>
+
+    <label for="inputText">Text</label>
+    <textarea id="inputText" rows="5" placeholder="Paste your email, DM, or rant here"></textarea>
+
+    <label for="cringe">Max cringe</label>
+    <input id="cringe" type="range" min="0" max="1" step="0.1" value="0.7" />
+
+    <button id="translateBtn">Translate</button>
+    <div id="loading" class="hidden">Translating...</div>
+
+    <h2>Results</h2>
+    <div id="variants"></div>
+
+    <h3 id="explanationsTitle" class="hidden">Explanations</h3>
+    <ul id="explanations"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
