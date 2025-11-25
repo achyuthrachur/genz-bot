@@ -6,9 +6,9 @@
 // - Serves static files from ./public.
 // - Defines POST /api/translate that expects JSON:
 //     { text: string, mode: "old_to_young" | "young_to_old" | "auto", options?: { max_cringe?: number, include_explanations?: boolean } }
-// - Uses the OpenAI Node SDK configured for a local Ollama server:
-//     apiKey: any non-empty string (ignored by Ollama)
-//     baseURL: "http://localhost:11434/v1"
+// - Uses the OpenAI Node SDK configured for Perplexity:
+//     apiKey: process.env.PERPLEXITY_API_KEY (or HARDCODED_API_KEY below)
+//     baseURL: "https://api.perplexity.ai"
 // - Calls the chat completions endpoint with messages (system + user).
 // - Asks the model to return JSON with shape:
 //     { mode, variants: [{ label, text }], explanations?: [{ original?, translated?, note }] }
@@ -24,18 +24,20 @@ const OpenAI = require('openai');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Ollama ignores apiKey, but the client requires a value.
-const apiKey = 'ollama';
+// If you intentionally want the key baked into the code, set this string.
+// Leaving it empty will rely on PERPLEXITY_API_KEY from env.
+const HARDCODED_API_KEY = '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';
+const apiKey = process.env.PERPLEXITY_API_KEY || HARDCODED_API_KEY;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Local Ollama via OpenAI-compatible SDK
+// Perplexity via OpenAI-compatible SDK
 const client = new OpenAI({
   apiKey,
-  baseURL: 'http://localhost:11434/v1'
+  baseURL: 'https://api.perplexity.ai'
 });
 
 // Build messages for the model
@@ -118,10 +120,14 @@ app.post('/api/translate', async (req, res) => {
       return res.status(400).json({ error: 'Missing or invalid "text" field.' });
     }
 
+    if (!apiKey) {
+      return res.status(500).json({ error: 'No Perplexity API key configured.' });
+    }
+
     const messages = buildMessages({ text, mode, options });
 
     const completion = await client.chat.completions.create({
-      model: 'llama3:8b', // any local model you've pulled in Ollama
+      model: 'sonar', // or sonar-pro / other Perplexity model you have access to
       messages,
       temperature: options.max_cringe ?? 0.7
     });
