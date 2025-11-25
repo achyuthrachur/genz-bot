@@ -1,32 +1,75 @@
 // script.js
-// Frontend logic for Gen Jargon Translator.
-//
-// Implements:
-// - On DOMContentLoaded, wires up #translateBtn.
-// - On click:
-//   - Reads #inputText, #mode, #cringe.
-//   - POSTs to /api/translate with JSON body.
-//   - Shows #loading while waiting.
-//   - Renders "variants" as cards in #variants.
-//   - Renders explanations (if any) as list items in #explanations.
-//   - Handles fetch or server errors gracefully.
+// Frontend logic for Gen Jargon Translator with richer UI state.
 
 document.addEventListener('DOMContentLoaded', () => {
   const inputText = document.getElementById('inputText');
   const modeSelect = document.getElementById('mode');
   const cringeInput = document.getElementById('cringe');
+  const cringeValue = document.getElementById('cringeValue');
   const translateBtn = document.getElementById('translateBtn');
   const loading = document.getElementById('loading');
+  const loadingText = document.getElementById('loadingText');
   const variantsDiv = document.getElementById('variants');
-  const explanationsTitle = document.getElementById('explanationsTitle');
+  const explanationsBlock = document.getElementById('explanationsBlock');
   const explanationsList = document.getElementById('explanations');
+  const quickSuggestions = document.getElementById('quickSuggestions');
+
+  const loadingMessages = [
+    'Rewriting the vibe...',
+    'Distilling corporate-ese...',
+    'Adding sparkle and slang...',
+    'Polishing for the boardroom...',
+    'Letting Gen Z cook...'
+  ];
+
+  const suggestionsByMode = {
+    old_to_young: [
+      'Please review the attached deck at your earliest convenience.',
+      'Let’s circle back on this after the meeting.',
+      'I appreciate your patience as we resolve this issue.',
+      'This proposal needs more budget alignment.'
+    ],
+    young_to_old: [
+      'Bruh this rollout is kind of mid, not gonna lie.',
+      'That email was giving zero chill.',
+      'Can we vibe check this plan before we ship?',
+      'Low-key this timeline is wild.'
+    ],
+    auto: [
+      'Honestly, this meeting is somewhat mediocre, to be honest.',
+      'This project is straight fire, everyone is hyped.',
+      'We should probably sync up next week.',
+      'ngl the last release was mid.'
+    ]
+  };
 
   function setLoading(isLoading) {
+    if (isLoading) {
+      const msg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+      loadingText.textContent = msg;
+    }
     loading.classList.toggle('hidden', !isLoading);
     translateBtn.disabled = isLoading;
   }
 
-  translateBtn.addEventListener('click', async () => {
+  function renderSuggestions() {
+    const mode = modeSelect.value;
+    const pool = suggestionsByMode[mode] || suggestionsByMode.auto;
+    quickSuggestions.innerHTML = '';
+    pool.forEach(text => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = text;
+      chip.addEventListener('click', () => {
+        inputText.value = text;
+        translate();
+      });
+      quickSuggestions.appendChild(chip);
+    });
+  }
+
+  async function translate() {
     const text = inputText.value.trim();
     const mode = modeSelect.value;
     const max_cringe = parseFloat(cringeInput.value);
@@ -39,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true);
     variantsDiv.innerHTML = '';
     explanationsList.innerHTML = '';
-    explanationsTitle.classList.add('hidden');
+    explanationsBlock.classList.add('hidden');
 
     try {
       const res = await fetch('/api/translate', {
@@ -64,13 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const explanations = data.explanations || [];
 
       if (variants.length === 0) {
-        variantsDiv.innerHTML = '<p>No variants returned.</p>';
+        variantsDiv.innerHTML = '<p class="muted">No variants returned.</p>';
       } else {
         variants.forEach(v => {
           const card = document.createElement('div');
           card.className = 'variant-card';
 
-          const label = document.createElement('h4');
+          const label = document.createElement('div');
+          label.className = 'variant-label';
           label.textContent = v.label || 'Variant';
 
           const textEl = document.createElement('p');
@@ -83,10 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (explanations.length > 0) {
-        explanationsTitle.classList.remove('hidden');
+        explanationsBlock.classList.remove('hidden');
         explanations.forEach(ex => {
           const li = document.createElement('li');
-          const original = ex.original ? `<strong>${ex.original}</strong> → ` : '';
+          const original = ex.original ? `<strong>${ex.original}</strong> -> ` : '';
           const translated = ex.translated ? `${ex.translated}: ` : '';
           li.innerHTML = `${original}${translated}${ex.note || ''}`;
           explanationsList.appendChild(li);
@@ -94,9 +138,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error(err);
-      variantsDiv.innerHTML = '<p>Something went wrong. Please try again.</p>';
+      variantsDiv.innerHTML = '<p class="muted">Something went wrong. Please try again.</p>';
     } finally {
       setLoading(false);
     }
+  }
+
+  // Event wiring
+  translateBtn.addEventListener('click', translate);
+  modeSelect.addEventListener('change', renderSuggestions);
+  cringeInput.addEventListener('input', () => {
+    cringeValue.textContent = parseFloat(cringeInput.value).toFixed(1);
   });
+
+  // Initialize UI
+  renderSuggestions();
+  cringeValue.textContent = parseFloat(cringeInput.value).toFixed(1);
 });

@@ -52,12 +52,12 @@ Your job:
 - Convert text between corporate / formal / boomer style and Gen Z / internet slang.
 - Preserve meaning but change tone, voice, and vocabulary.
 - Modes:
-  - "old_to_young": corporate → Gen Z / internet.
-  - "young_to_old": Gen Z / internet → professional / corporate.
+  - "old_to_young": corporate -> Gen Z / internet.
+  - "young_to_old": Gen Z / internet -> professional / corporate.
 - If mode is "auto", guess which direction makes more sense and choose "old_to_young" or "young_to_old".
 
 Output format:
-Return ONLY valid JSON with this shape:
+Return ONLY valid JSON (no markdown, no code fences) with this shape:
 {
   "mode": "old_to_young" | "young_to_old",
   "variants": [
@@ -85,6 +85,31 @@ Rules:
     { role: 'system', content: systemPrompt },
     { role: 'user', content: JSON.stringify(userPayload) }
   ];
+}
+
+// Extract JSON even if the model wraps it in ```json fences
+function parseModelJson(raw, fallbackMode) {
+  if (!raw || typeof raw !== 'string') {
+    return {
+      mode: fallbackMode,
+      variants: [{ label: 'Default', text: '' }],
+      explanations: []
+    };
+  }
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const candidate = fenced ? fenced[1] : raw;
+
+  try {
+    return JSON.parse(candidate);
+  } catch (e) {
+    console.warn('Model returned non-JSON, falling back:', raw);
+    return {
+      mode: fallbackMode,
+      variants: [{ label: 'Default', text: raw }],
+      explanations: []
+    };
+  }
 }
 
 app.post('/api/translate', async (req, res) => {
@@ -118,18 +143,7 @@ app.post('/api/translate', async (req, res) => {
     });
 
     const raw = completion.choices?.[0]?.message?.content || '';
-    let parsed;
-
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.warn('Model returned non-JSON, falling back:', raw);
-      parsed = {
-        mode,
-        variants: [{ label: 'Default', text: raw }],
-        explanations: []
-      };
-    }
+    const parsed = parseModelJson(raw, mode);
 
     res.json(parsed);
   } catch (err) {

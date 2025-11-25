@@ -1,53 +1,75 @@
-<!--
-Simple UI for Gen Jargon Translator.
-
-Codex, please:
-- Use a centered container.
-- Add:
-  - A select#mode: old_to_young, young_to_old, auto.
-  - A textarea#inputText for the source text.
-  - A range input#cringe (0-1 step 0.1) for max cringe.
-  - A button#translateBtn to call the backend.
-  - A div#loading for "Translating..." message (hidden by default).
-  - A div#variants for result cards.
-  - A ul#explanations for explanations.
-
-Include script.js and styles.css.
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gen Jargon Translator</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <h1>Gen Jargon Translator</h1>
-    <p>Convert between corporate speak and Gen Z slang 👵 ↔ 🧑‍🎤</p>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Tone-shift anything</p>
+        <h1>Gen Jargon Translator</h1>
+        <p class="lede">Flip between polished corporate and unapologetic Gen Z slang. Choose a lane or let auto-detect decide.</p>
+      </div>
+      <div class="badge">AI powered</div>
+    </header>
 
-    <label for="mode">Mode</label>
-    <select id="mode">
-      <option value="old_to_young">Old → Young</option>
-      <option value="young_to_old">Young → Old</option>
-      <option value="auto">Auto detect</option>
-    </select>
+    <section class="panel">
+      <div class="controls">
+        <div class="field">
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="old_to_young">Boomer -> Gen Z</option>
+            <option value="young_to_old">Gen Z -> Boomer</option>
+            <option value="auto">Auto detect</option>
+          </select>
+        </div>
 
-    <label for="inputText">Text</label>
-    <textarea id="inputText" rows="5" placeholder="Paste your email, DM, or rant here"></textarea>
+        <div class="field">
+          <label for="inputText">Text</label>
+          <textarea id="inputText" rows="5" placeholder="Paste your email, DM, or rant here"></textarea>
+        </div>
 
-    <label for="cringe">Max cringe</label>
-    <input id="cringe" type="range" min="0" max="1" step="0.1" value="0.7" />
+        <div class="field">
+          <label for="cringe">Max cringe</label>
+          <div class="slider-row">
+            <input id="cringe" type="range" min="0" max="1" step="0.1" value="0.7" />
+            <span id="cringeValue">0.7</span>
+          </div>
+        </div>
 
-    <button id="translateBtn">Translate</button>
-    <div id="loading" class="hidden">Translating...</div>
+        <div class="quick-row">
+          <p class="quick-label">Quick starters</p>
+          <div id="quickSuggestions" class="chips"></div>
+        </div>
 
-    <h2>Results</h2>
-    <div id="variants"></div>
+        <div class="actions">
+          <button id="translateBtn">Translate</button>
+          <div id="loading" class="hidden">
+            <span class="dot-pulse"></span>
+            <span id="loadingText">Translating...</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <h3 id="explanationsTitle" class="hidden">Explanations</h3>
-    <ul id="explanations"></ul>
+    <section class="panel results">
+      <div class="results-header">
+        <div>
+          <p class="eyebrow">Results</p>
+          <h2>Variants</h2>
+        </div>
+      </div>
+      <div id="variants" class="variants-grid"></div>
+
+      <div id="explanationsBlock" class="explanations hidden">
+        <h3>Explanations</h3>
+        <ul id="explanations"></ul>
+      </div>
+    </section>
   </div>
 
   <script src="script.js"></script>
