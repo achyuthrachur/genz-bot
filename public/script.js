@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'Distilling corporate-ese...',
     'Adding sparkle and slang...',
     'Polishing for the boardroom...',
-    'Letting Gen Z cook...'
+    'Letting Gen Z cook...',
+    'Dialing up the charisma...',
+    'Decluttering the cringe...'
   ];
 
   const suggestionsByMode = {
@@ -43,13 +45,25 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  function setLoading(isLoading) {
-    if (isLoading) {
-      const msg = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-      loadingText.textContent = msg;
+  let loadingInterval = null;
+  function startLoading() {
+    let idx = Math.floor(Math.random() * loadingMessages.length);
+    loadingText.textContent = loadingMessages[idx];
+    loading.classList.remove('hidden');
+    translateBtn.disabled = true;
+    loadingInterval = setInterval(() => {
+      idx = (idx + 1) % loadingMessages.length;
+      loadingText.textContent = loadingMessages[idx];
+    }, 650);
+  }
+
+  function stopLoading() {
+    if (loadingInterval) {
+      clearInterval(loadingInterval);
+      loadingInterval = null;
     }
-    loading.classList.toggle('hidden', !isLoading);
-    translateBtn.disabled = isLoading;
+    loading.classList.add('hidden');
+    translateBtn.disabled = false;
   }
 
   function renderSuggestions() {
@@ -79,12 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    setLoading(true);
+    startLoading();
     variantsDiv.innerHTML = '';
     explanationsList.innerHTML = '';
     explanationsBlock.classList.add('hidden');
 
     try {
+      const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
       const res = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await res.json();
+      await minDelay; // let loading messages cycle a bit
       const variants = data.variants || [];
       const explanations = data.explanations || [];
 
@@ -130,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         explanationsBlock.classList.remove('hidden');
         explanations.forEach(ex => {
           const li = document.createElement('li');
-          const original = ex.original ? `<strong>${ex.original}</strong> -> ` : '';
+          const original = ex.original ? `<strong>${ex.original}</strong> → ` : '';
           const translated = ex.translated ? `${ex.translated}: ` : '';
           li.innerHTML = `${original}${translated}${ex.note || ''}`;
           explanationsList.appendChild(li);
@@ -140,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
       variantsDiv.innerHTML = '<p class="muted">Something went wrong. Please try again.</p>';
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   }
 
