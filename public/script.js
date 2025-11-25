@@ -24,26 +24,102 @@ document.addEventListener('DOMContentLoaded', () => {
     'Decluttering the cringe...'
   ];
 
-  const suggestionsByMode = {
-    old_to_young: [
-      'Please review the attached deck at your earliest convenience.',
-      'Let’s circle back on this after the meeting.',
-      'I appreciate your patience as we resolve this issue.',
-      'This proposal needs more budget alignment.'
-    ],
-    young_to_old: [
-      'Bruh this rollout is kind of mid, not gonna lie.',
-      'That email was giving zero chill.',
-      'Can we vibe check this plan before we ship?',
-      'Low-key this timeline is wild.'
-    ],
-    auto: [
-      'Honestly, this meeting is somewhat mediocre, to be honest.',
-      'This project is straight fire, everyone is hyped.',
-      'We should probably sync up next week.',
-      'ngl the last release was mid.'
-    ]
-  };
+  const boomerToGenZSuggestions = [
+    'Please review the attached deck at your earliest convenience.',
+    'Let’s circle back on this after the meeting.',
+    'I appreciate your patience as we resolve this issue.',
+    'This proposal needs more budget alignment.',
+    'Please keep me posted on any blockers.',
+    'We should schedule a follow-up call next week.',
+    'Let’s take this offline.',
+    'Kindly find attached the revised document.',
+    'Please provide a status update by EOD.',
+    'We need to set expectations with the client.',
+    'Let’s align on priorities for this sprint.',
+    'The timeline is aggressive; we may need more resources.',
+    'Please obtain stakeholder sign-off.',
+    'Let’s brainstorm solutions in tomorrow’s standup.',
+    'Please escalate if you hit any critical issues.',
+    'Let’s discuss risks and mitigations.',
+    'Please be proactive with communication.',
+    'We should optimize the process for efficiency.',
+    'Kindly send a summary of action items.',
+    'Let’s ensure we stay within scope.',
+    'Please confirm receipt of this email.',
+    'The deliverable needs polish before shipping.',
+    'Let’s tighten the messaging on this announcement.',
+    'Please double-check the numbers before sharing.',
+    'We need to manage expectations with leadership.',
+    'Let’s revisit the roadmap for dependencies.',
+    'Please avoid scope creep on this feature.',
+    'Kindly share the meeting agenda in advance.',
+    'Let’s schedule a retrospective after launch.',
+    'Please provide a concise executive summary.',
+    'We should document the lessons learned.',
+    'Let’s avoid unnecessary churn in the plan.',
+    'Please secure approvals before proceeding.',
+    'We need a more data-driven approach.',
+    'Let’s minimize back-and-forth with clearer requirements.',
+    'Please clarify ownership for each task.',
+    'We need to re-baseline the schedule.',
+    'Let’s ensure QA has enough time.',
+    'Please keep communication transparent with stakeholders.',
+    'Let’s formalize the handoff process.'
+  ];
+
+  const genZToBoomerSuggestions = [
+    'Bruh this rollout is kind of mid, not gonna lie.',
+    'That email was giving zero chill.',
+    'Can we vibe check this plan before we ship?',
+    'Low-key this timeline is wild.',
+    'ngl the last release was mid.',
+    'This deck needs more drip.',
+    'The design slaps but perf is sus.',
+    'Squad is heads down grinding fr.',
+    'This feature is goated if we ship it clean.',
+    'We need a sanity check before it ships.',
+    'Stakeholders were big mad on the call.',
+    'The meeting was a whole snoozefest.',
+    'The docs are a little sus rn.',
+    'Can we get receipts on that data?',
+    'This bug is cooking my brain.',
+    'The dashboard is low-key bussin.',
+    'We’re on the struggle bus with auth.',
+    'Product wants extra sprinkles on top.',
+    'That hotfix was clutch ngl.',
+    'Timeline is brutal, we need backup.',
+    'This copy is giving corporate cringe.',
+    'QA found some spicy edge cases.',
+    'Can we chill with the scope creep?',
+    'That KPI is cap without better data.',
+    'The API is moving kinda sus today.',
+    'Design wants to add more sparkle.',
+    'This sprint is already stacked.',
+    'Can we not ship vibes-only testing?',
+    'The error message is yelling at users.',
+    'This is fine.gif energy right now.',
+    'The team is cooking, let them cook.',
+    'These meetings are not the vibe.',
+    'Deploy broke and everyone panicked.',
+    'This feature is extra but kinda fun.',
+    'Can we get a TL;DR before the call?',
+    'Low-key need a nap after that retro.',
+    'The timeline feels cursed rn.',
+    'This toolchain is doing the most.',
+    'Auth is acting feral again.',
+    'The cache is gaslighting us.'
+  ];
+
+  const SUGGESTION_COUNT = 8;
+
+  function getRandomSubset(arr, count) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, Math.min(count, copy.length));
+  }
 
   let loadingInterval = null;
   function startLoading() {
@@ -68,9 +144,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderSuggestions() {
     const mode = modeSelect.value;
-    const pool = suggestionsByMode[mode] || suggestionsByMode.auto;
+    let pool = [];
+    if (mode === 'old_to_young') {
+      pool = boomerToGenZSuggestions;
+    } else if (mode === 'young_to_old') {
+      pool = genZToBoomerSuggestions;
+    } else {
+      pool = [...boomerToGenZSuggestions, ...genZToBoomerSuggestions];
+    }
+    const subset = getRandomSubset(pool, SUGGESTION_COUNT);
     quickSuggestions.innerHTML = '';
-    pool.forEach(text => {
+    subset.forEach(text => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'chip';
@@ -157,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       variantsDiv.innerHTML = '<p class="muted">Something went wrong. Please try again.</p>';
     } finally {
       stopLoading();
+      renderSuggestions(); // refresh subset each time
     }
   }
 
